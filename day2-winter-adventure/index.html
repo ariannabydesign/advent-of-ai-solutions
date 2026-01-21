@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Winter Forest Tale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Snowflakes */
+        .snowflakes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 1.5rem;
+            animation: fall linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+
+        /* Main container */
+        .story-container {
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .title {
+            text-align: center;
+            color: #e8f4f8;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(135, 206, 235, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #87ceeb;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+        }
+
+        .story-text {
+            color: #e8f4f8;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            text-align: center;
+            min-height: 150px;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.2) 0%, rgba(70, 130, 180, 0.3) 100%);
+            border: 1px solid rgba(135, 206, 235, 0.4);
+            color: #e8f4f8;
+            padding: 18px 25px;
+            font-size: 1.1rem;
+            font-family: 'Georgia', serif;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .choice-btn:hover {
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.4) 0%, rgba(70, 130, 180, 0.5) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.2);
+        }
+
+        .choice-btn:active {
+            transform: translateY(0);
+        }
+
+        .ending {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ending-title {
+            color: #ffd700;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-family: 'Georgia', serif;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(74, 158, 255, 0.4);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .stat {
+            text-align: center;
+            color: #87ceeb;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .scene-art {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="snowflakes" id="snowflakes"></div>
+    
+    <div class="story-container">
+        <h1 class="title">❄️ The Winter Forest Tale ❄️</h1>
+        <p class="subtitle">A Choose Your Own Adventure</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="courage">5</div>
+                <div class="stat-label">Courage</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="wisdom">5</div>
+                <div class="stat-label">Wisdom</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="kindness">5</div>
+                <div class="stat-label">Kindness</div>
+            </div>
+        </div>
+
+        <div class="scene-art" id="sceneArt">🌲🌨️🌲</div>
+        
+        <div class="story-text" id="storyText">
+            Loading your adventure...
+        </div>
+        
+        <div class="choices" id="choices">
+        </div>
+    </div>
+
+    <script>
+        // Character stats
+        let stats = {
+            courage: 5,
+            wisdom: 5,
+            kindness: 5
+        };
+
+        // Story data structure
+        const story = {
+            start: {
+                art: "🌲🌨️🌲",
+                text: "You stand at the edge of an enchanted winter forest. Snowflakes dance in the silver moonlight, and the air sparkles with magic. Two paths lie before you, each disappearing into the misty woods.",
+                choices: [
+                    { text: "🌲 Take the dark forest path", next: "forest_path", stats: { courage: 2 } },
+                    { text: "🏔️ Climb the snowy mountain trail", next: "mountain_path", stats: { wisdom: 2 } }
+                ]
+            },
+            forest_path: {
+                art: "🦊🌲✨",
+                text: "The forest path winds deeper into the woods. Suddenly, you hear a soft whimpering. A small silver fox is caught in an old hunter's trap, its eyes pleading for help. But you also notice glowing lights deeper in the forest - perhaps the legendary Winter Spirits?",
+                choices: [
+                    { text: "🦊 Help the trapped fox", next: "help_fox", stats: { kindness: 3 } },
+                    { text: "✨ Follow the mysterious lights", next: "follow_lights", stats: { courage: 2 } },
+                    { text: "🏃 Continue on the path quickly", next: "ignore_fox", stats: { wisdom: -1, kindness: -2 } }
+                ]
+            },
+            mountain_path: {
+                art: "🏔️❄️🌙",
+                text: "The mountain trail is steep and treacherous. Halfway up, you discover a cave entrance glowing with warm light. An old hermit sits inside, tending a fire. He looks up and smiles knowingly.",
+                choices: [
+                    { text: "🔥 Enter the cave and speak with the hermit", next: "meet_hermit", stats: { wisdom: 2 } },
+                    { text: "⛰️ Continue climbing to the summit", next: "summit", stats: { courage: 3 } }
+                ]
+            },
+            help_fox: {
+                art: "🦊💫🌟",
+                text: "You carefully free the fox from the trap. It transforms into a shimmering spirit! 'Thank you, kind traveler,' it speaks. 'I am the Guardian of the Forest. For your compassion, I offer you a choice of gifts.'",
+                choices: [
+                    { text: "🗝️ Ask for the Key to the Frozen Palace", next: "ending_palace", stats: { wisdom: 2 } },
+                    { text: "💫 Ask for the gift of speaking with animals", next: "ending_animals", stats: { kindness: 3 } }
+                ]
+            },
+            follow_lights: {
+                art: "✨👻✨",
+                text: "The lights lead you to a clearing where Winter Spirits dance in a circle. They notice you and stop. 'A mortal! How bold!' their leader exclaims. 'Dance with us until dawn, or answer our riddle to pass.'",
+                choices: [
+                    { text: "💃 Dance with the spirits", next: "dance_spirits", stats: { courage: 3 } },
+                    { text: "🧩 Accept the riddle challenge", next: "riddle", stats: { wisdom: 3 } }
+                ]
+            },
+            ignore_fox: {
+                art: "🌲💨🌲",
+                text: "You hurry past the fox, but its sad eyes haunt you. The forest grows darker and colder. Eventually, you find yourself lost, walking in circles as the temperature drops dangerously.",
+                choices: [
+                    { text: "🔙 Go back and help the fox", next: "help_fox_late", stats: { kindness: 2 } },
+                    { text: "❄️ Push forward alone", next: "ending_lost", stats: { courage: 1 } }
+                ]
+            },
+            help_fox_late: {
+                art: "🦊❤️🌲",
+                text: "You return to find the fox still trapped. With frozen fingers, you free it. The fox nuzzles your hand gratefully and leads you to safety through a hidden path only forest creatures know.",
+                choices: [
+                    { text: "🏠 Follow the fox to safety", next: "ending_humble", stats: { kindness: 2 } }
+                ]
+            },
+            meet_hermit: {
+                art: "🧙‍♂️🔥📚",
+                text: "The hermit offers you warm tea and ancient wisdom. 'I have waited long for someone worthy,' he says. 'I can teach you the old magic, or give you the map to the greatest treasure of winter.'",
+                choices: [
+                    { text: "📖 Learn the old magic", next: "ending_magic", stats: { wisdom: 4 } },
+                    { text: "🗺️ Take the treasure map", next: "ending_treasure", stats: { courage: 2 } }
+                ]
+            },
+            summit: {
+                art: "⛰️🌟👑",
+                text: "You reach the frozen summit as dawn breaks. There, trapped in eternal ice, sits the legendary Snow Queen! She speaks through the crystal: 'Free me with warmth, or take my crown and rule winter forever.'",
+                choices: [
+                    { text: "🤗 Use your body heat to melt the ice", next: "ending_queen_free", stats: { kindness: 4, courage: 2 } },
+                    { text: "👑 Take the crown of eternal winter", next: "ending_queen_crown", stats: { courage: 3 } }
+                ]
+            },
+            dance_spirits: {
+                art: "💃✨🎵",
+                text: "You dance with wild abandon! The spirits are delighted by your courage and joy. As dawn approaches, they crown you with a wreath of eternal frost flowers, granting you their blessing.",
+                choices: [
+                    { text: "✨ Accept your blessing", next: "ending_spirit_blessed" }
+                ]
+            },
+            riddle: {
+                art: "🧩❄️🤔",
+                text: "The spirit asks: 'I am light as a feather, yet no one can hold me for long. I blanket the world in silence, yet I am born from clouds that sing. What am I?'",
+                choices: [
+                    { text: "❄️ Snow!", next: "ending_riddle_win", stats: { wisdom: 4 } },
+                    { text: "💨 Wind!", next: "ending_riddle_lose", stats: { wisdom: -1 } }
+                ]
+            },
+            
+            // ENDINGS
+            ending_palace: {
+                art: "🏰❄️✨",
+                text: "THE FROZEN PALACE ENDING\n\nWith the magical key, you unlock the legendary Frozen Palace and discover its wonders. You become its guardian, welcoming lost travelers and sharing its warmth forever.",
+                ending: true,
+                title: "Guardian of the Frozen Palace"
+            },
+            ending_animals: {
+                art: "🦊🐺🦌",
+                text: "THE VOICE OF THE WILD ENDING\n\nYou gain the ability to speak with all creatures. Animals from across the land seek your wisdom, and you become known as the great Mediator of the Wild.",
+                ending: true,
+                title: "Voice of the Wild"
+            },
+            ending_lost: {
+                art: "❄️😢❄️",
+                text: "THE FROZEN WANDERER ENDING\n\nLost and alone, you wander until a rescue party finds you at dawn. You survive, but the forest's magic is forever closed to you. Perhaps kindness would have led to a different fate...",
+                ending: true,
+                title: "The Frozen Wanderer"
+            },
+            ending_humble: {
+                art: "🏡🦊❤️",
+                text: "THE HUMBLE HEART ENDING\n\nThe fox leads you to a cozy cottage where forest creatures live in harmony. They invite you to stay, and you spend your days in simple happiness, surrounded by grateful friends.",
+                ending: true,
+                title: "The Humble Heart"
+            },
+            ending_magic: {
+                art: "🧙‍♂️✨📖",
+                text: "THE WINTER MAGE ENDING\n\nYou study with the hermit and master the old magic. Years later, you become the legendary Winter Mage, protecting the forest and teaching others the ancient ways.",
+                ending: true,
+                title: "The Winter Mage"
+            },
+            ending_treasure: {
+                art: "💎🗺️🎉",
+                text: "THE TREASURE HUNTER ENDING\n\nThe map leads you to a vault of ancient winter artifacts. You become wealthy beyond dreams and use your fortune to help those in need during harsh winters.",
+                ending: true,
+                title: "The Treasure Hunter"
+            },
+            ending_queen_free: {
+                art: "👸❤️🌸",
+                text: "THE SPRING AWAKENING ENDING\n\nYour warmth and sacrifice frees the Snow Queen! Grateful, she ends the eternal winter and brings balance to the seasons. Spring blooms for the first time in a thousand years.",
+                ending: true,
+                title: "Bringer of Spring"
+            },
+            ending_queen_crown: {
+                art: "👑❄️🌨️",
+                text: "THE WINTER MONARCH ENDING\n\nYou place the crown upon your head and feel infinite power surge through you. You rule winter eternally, commanding snowstorms and guiding the cold across the world.",
+                ending: true,
+                title: "The Winter Monarch"
+            },
+            ending_spirit_blessed: {
+                art: "💫🎭✨",
+                text: "THE SPIRIT DANCER ENDING\n\nBlessed by the Winter Spirits, you can walk between the mortal and spirit realms. Every winter solstice, you return to dance with your ethereal friends.",
+                ending: true,
+                title: "The Spirit Dancer"
+            },
+            ending_riddle_win: {
+                art: "🏆❄️🎊",
+                text: "THE WISE WANDERER ENDING\n\n'Correct!' the spirits cheer. They grant you passage and the gift of winter wisdom. You become a legendary storyteller, sharing tales of the magical forest.",
+                ending: true,
+                title: "The Wise Wanderer"
+            },
+            ending_riddle_lose: {
+                art: "👻😵✨",
+                text: "THE ETERNAL DANCER ENDING\n\n'Wrong!' the spirits laugh. You dance until dawn and beyond, joining their eternal celebration. You become one of them - a Winter Spirit dancing forever in the moonlight.",
+                ending: true,
+                title: "The Eternal Dancer"
+            }
+        };
+
+        // Update stats display
+        function updateStats() {
+            document.getElementById('courage').textContent = stats.courage;
+            document.getElementById('wisdom').textContent = stats.wisdom;
+            document.getElementById('kindness').textContent = stats.kindness;
+        }
+
+        // Apply stat changes
+        function applyStats(statChanges) {
+            if (statChanges) {
+                for (const [stat, change] of Object.entries(statChanges)) {
+                    stats[stat] = Math.max(0, Math.min(10, stats[stat] + change));
+                }
+                updateStats();
+            }
+        }
+
+        // Display a scene
+        function showScene(sceneId) {
+            const scene = story[sceneId];
+            const storyText = document.getElementById('storyText');
+            const choicesDiv = document.getElementById('choices');
+            const sceneArt = document.getElementById('sceneArt');
+
+            // Update scene art
+            sceneArt.textContent = scene.art || "❄️";
+
+            // Update story text
+            storyText.textContent = scene.text;
+
+            // Clear choices
+            choicesDiv.innerHTML = '';
+
+            // Check if this is an ending
+            if (scene.ending) {
+                const endingDiv = document.createElement('div');
+                endingDiv.className = 'ending';
+                endingDiv.innerHTML = `<div class="ending-title">🎭 ${scene.title} 🎭</div>`;
+                choicesDiv.appendChild(endingDiv);
+
+                const restartBtn = document.createElement('button');
+                restartBtn.className = 'restart-btn';
+                restartBtn.textContent = '🔄 Begin a New Adventure';
+                restartBtn.onclick = () => {
+                    stats = { courage: 5, wisdom: 5, kindness: 5 };
+                    updateStats();
+                    showScene('start');
+                };
+                choicesDiv.appendChild(restartBtn);
+            } else {
+                // Add choice buttons
+                scene.choices.forEach(choice => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = choice.text;
+                    btn.onclick = () => {
+                        applyStats(choice.stats);
+                        showScene(choice.next);
+                    };
+                    choicesDiv.appendChild(btn);
+                });
+            }
+
+            // Save progress
+            localStorage.setItem('winterAdventure', JSON.stringify({
+                scene: sceneId,
+                stats: stats
+            }));
+        }
+
+        // Create snowflakes
+        function createSnowflakes() {
+            const container = document.getElementById('snowflakes');
+            const snowflakeChars = ['❄', '❅', '❆', '✧', '✦'];
+            
+            for (let i = 0; i < 50; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                snowflake.style.animationDelay = (Math.random() * 10) + 's';
+                snowflake.style.fontSize = (Math.random() * 1.5 + 0.5) + 'rem';
+                container.appendChild(snowflake);
+            }
+        }
+
+        // Initialize
+        function init() {
+            createSnowflakes();
+            
+            // Check for saved game
+            const saved = localStorage.getItem('winterAdventure');
+            if (saved) {
+                const data = JSON.parse(saved);
+                stats = data.stats;
+                updateStats();
+                showScene(data.scene);
+            } else {
+                showScene('start');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
