@@ -1,6 +1,8 @@
-# Advent of AI Challenges 🪿
+# Advent of AI Solutions 🪿
 
-My solutions to the [Goose Advent of AI](https://github.com/block/goose/discussions/categories/advent-of-ai) challenges.
+My solutions for the Advent of AI challenge, building AI agents using the Goose framework.
+
+**CreateHer Fest 2026 #75HER**
 
 Built with [Goose](https://github.com/block/goose) by Block.
 
