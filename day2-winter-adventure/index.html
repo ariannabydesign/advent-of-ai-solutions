@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Winter Forest Tale</title>
+    <title>Winter Forest Magic</title>
     <style>
         * {
             margin: 0;
@@ -23,7 +23,6 @@
             overflow-x: hidden;
         }
 
-        /* Snowflakes */
         .snowflakes {
             position: fixed;
             top: 0;
@@ -43,15 +42,10 @@
         }
 
         @keyframes fall {
-            0% {
-                transform: translateY(-10vh) rotate(0deg);
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-            }
+            0% { transform: translateY(-10vh) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(360deg); }
         }
 
-        /* Main container */
         .story-container {
             background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
             backdrop-filter: blur(10px);
@@ -113,10 +107,6 @@
             background: linear-gradient(135deg, rgba(135, 206, 235, 0.4) 0%, rgba(70, 130, 180, 0.5) 100%);
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(135, 206, 235, 0.2);
-        }
-
-        .choice-btn:active {
-            transform: translateY(0);
         }
 
         .ending {
@@ -183,13 +173,51 @@
             font-size: 3rem;
             margin-bottom: 20px;
         }
+
+        .music-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 165, 0, 0.4) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            color: #ffd700;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .music-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.5) 0%, rgba(255, 165, 0, 0.6) 100%);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .music-btn.playing {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+        }
     </style>
 </head>
 <body>
     <div class="snowflakes" id="snowflakes"></div>
     
+    <!-- Background Music -->
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/12/20/audio_4add93e498.mp3" type="audio/mpeg">
+    </audio>
+    
+    <button class="music-btn" id="musicBtn">Click to Play Music</button>
+    
     <div class="story-container">
-        <h1 class="title">❄️ The Winter Forest Tale ❄️</h1>
+        <h1 class="title">Winter Forest Magic</h1>
         <p class="subtitle">A Choose Your Own Adventure</p>
         
         <div class="stats">
@@ -207,29 +235,21 @@
             </div>
         </div>
 
-        <div class="scene-art" id="sceneArt">🌲🌨️🌲</div>
+        <div class="scene-art" id="sceneArt"></div>
         
-        <div class="story-text" id="storyText">
-            Loading your adventure...
-        </div>
+        <div class="story-text" id="storyText">Loading your adventure...</div>
         
-        <div class="choices" id="choices">
-        </div>
+        <div class="choices" id="choices"></div>
     </div>
 
     <script>
-        // Character stats
-        let stats = {
-            courage: 5,
-            wisdom: 5,
-            kindness: 5
-        };
+        let stats = { courage: 5, wisdom: 5, kindness: 5 };
+        let musicPlaying = false;
 
-        // Story data structure
         const story = {
             start: {
-                art: "🌲🌨️🌲",
-                text: "You stand at the edge of an enchanted winter forest. Snowflakes dance in the silver moonlight, and the air sparkles with magic. Two paths lie before you, each disappearing into the misty woods.",
+                art: "🌲🦌🌲",
+                text: "You stand at the edge of an enchanted winter forest. Snowflakes dance in the silver moonlight, and the air sparkles with magic. A majestic deer watches you from between the evergreen trees. Two paths lie before you.",
                 choices: [
                     { text: "🌲 Take the dark forest path", next: "forest_path", stats: { courage: 2 } },
                     { text: "🏔️ Climb the snowy mountain trail", next: "mountain_path", stats: { wisdom: 2 } }
@@ -261,7 +281,7 @@
                 ]
             },
             follow_lights: {
-                art: "✨👻✨",
+                art: "✨🌲✨",
                 text: "The lights lead you to a clearing where Winter Spirits dance in a circle. They notice you and stop. 'A mortal! How bold!' their leader exclaims. 'Dance with us until dawn, or answer our riddle to pass.'",
                 choices: [
                     { text: "💃 Dance with the spirits", next: "dance_spirits", stats: { courage: 3 } },
@@ -314,84 +334,95 @@
                     { text: "💨 Wind!", next: "ending_riddle_lose", stats: { wisdom: -1 } }
                 ]
             },
-            
-            // ENDINGS
             ending_palace: {
                 art: "🏰❄️✨",
-                text: "THE FROZEN PALACE ENDING\n\nWith the magical key, you unlock the legendary Frozen Palace and discover its wonders. You become its guardian, welcoming lost travelers and sharing its warmth forever.",
+                text: "THE FROZEN PALACE ENDING - With the magical key, you unlock the legendary Frozen Palace and discover its wonders. You become its guardian, welcoming lost travelers and sharing its warmth forever.",
                 ending: true,
                 title: "Guardian of the Frozen Palace"
             },
             ending_animals: {
                 art: "🦊🐺🦌",
-                text: "THE VOICE OF THE WILD ENDING\n\nYou gain the ability to speak with all creatures. Animals from across the land seek your wisdom, and you become known as the great Mediator of the Wild.",
+                text: "THE VOICE OF THE WILD ENDING - You gain the ability to speak with all creatures. Animals from across the land seek your wisdom, and you become known as the great Mediator of the Wild.",
                 ending: true,
                 title: "Voice of the Wild"
             },
             ending_lost: {
                 art: "❄️😢❄️",
-                text: "THE FROZEN WANDERER ENDING\n\nLost and alone, you wander until a rescue party finds you at dawn. You survive, but the forest's magic is forever closed to you. Perhaps kindness would have led to a different fate...",
+                text: "THE FROZEN WANDERER ENDING - Lost and alone, you wander until a rescue party finds you at dawn. You survive, but the forest's magic is forever closed to you. Perhaps kindness would have led to a different fate...",
                 ending: true,
                 title: "The Frozen Wanderer"
             },
             ending_humble: {
                 art: "🏡🦊❤️",
-                text: "THE HUMBLE HEART ENDING\n\nThe fox leads you to a cozy cottage where forest creatures live in harmony. They invite you to stay, and you spend your days in simple happiness, surrounded by grateful friends.",
+                text: "THE HUMBLE HEART ENDING - The fox leads you to a cozy cottage where forest creatures live in harmony. They invite you to stay, and you spend your days in simple happiness, surrounded by grateful friends.",
                 ending: true,
                 title: "The Humble Heart"
             },
             ending_magic: {
                 art: "🧙‍♂️✨📖",
-                text: "THE WINTER MAGE ENDING\n\nYou study with the hermit and master the old magic. Years later, you become the legendary Winter Mage, protecting the forest and teaching others the ancient ways.",
+                text: "THE WINTER MAGE ENDING - You study with the hermit and master the old magic. Years later, you become the legendary Winter Mage, protecting the forest and teaching others the ancient ways.",
                 ending: true,
                 title: "The Winter Mage"
             },
             ending_treasure: {
                 art: "💎🗺️🎉",
-                text: "THE TREASURE HUNTER ENDING\n\nThe map leads you to a vault of ancient winter artifacts. You become wealthy beyond dreams and use your fortune to help those in need during harsh winters.",
+                text: "THE TREASURE HUNTER ENDING - The map leads you to a vault of ancient winter artifacts. You become wealthy beyond dreams and use your fortune to help those in need during harsh winters.",
                 ending: true,
                 title: "The Treasure Hunter"
             },
             ending_queen_free: {
                 art: "👸❤️🌸",
-                text: "THE SPRING AWAKENING ENDING\n\nYour warmth and sacrifice frees the Snow Queen! Grateful, she ends the eternal winter and brings balance to the seasons. Spring blooms for the first time in a thousand years.",
+                text: "THE SPRING AWAKENING ENDING - Your warmth and sacrifice frees the Snow Queen! Grateful, she ends the eternal winter and brings balance to the seasons. Spring blooms for the first time in a thousand years.",
                 ending: true,
                 title: "Bringer of Spring"
             },
             ending_queen_crown: {
                 art: "👑❄️🌨️",
-                text: "THE WINTER MONARCH ENDING\n\nYou place the crown upon your head and feel infinite power surge through you. You rule winter eternally, commanding snowstorms and guiding the cold across the world.",
+                text: "THE WINTER MONARCH ENDING - You place the crown upon your head and feel infinite power surge through you. You rule winter eternally, commanding snowstorms and guiding the cold across the world.",
                 ending: true,
                 title: "The Winter Monarch"
             },
             ending_spirit_blessed: {
                 art: "💫🎭✨",
-                text: "THE SPIRIT DANCER ENDING\n\nBlessed by the Winter Spirits, you can walk between the mortal and spirit realms. Every winter solstice, you return to dance with your ethereal friends.",
+                text: "THE SPIRIT DANCER ENDING - Blessed by the Winter Spirits, you can walk between the mortal and spirit realms. Every winter solstice, you return to dance with your ethereal friends.",
                 ending: true,
                 title: "The Spirit Dancer"
             },
             ending_riddle_win: {
                 art: "🏆❄️🎊",
-                text: "THE WISE WANDERER ENDING\n\n'Correct!' the spirits cheer. They grant you passage and the gift of winter wisdom. You become a legendary storyteller, sharing tales of the magical forest.",
+                text: "THE WISE WANDERER ENDING - 'Correct!' the spirits cheer. They grant you passage and the gift of winter wisdom. You become a legendary storyteller, sharing tales of the magical forest.",
                 ending: true,
                 title: "The Wise Wanderer"
             },
             ending_riddle_lose: {
                 art: "👻😵✨",
-                text: "THE ETERNAL DANCER ENDING\n\n'Wrong!' the spirits laugh. You dance until dawn and beyond, joining their eternal celebration. You become one of them - a Winter Spirit dancing forever in the moonlight.",
+                text: "THE ETERNAL DANCER ENDING - 'Wrong!' the spirits laugh. You dance until dawn and beyond, joining their eternal celebration. You become one of them - a Winter Spirit dancing forever in the moonlight.",
                 ending: true,
                 title: "The Eternal Dancer"
             }
         };
 
-        // Update stats display
+        function toggleMusic() {
+            const music = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicBtn');
+            if (musicPlaying) {
+                music.pause();
+                btn.textContent = 'Click to Play Music';
+                btn.classList.remove('playing');
+            } else {
+                music.play();
+                btn.textContent = 'Pause Music';
+                btn.classList.add('playing');
+            }
+            musicPlaying = !musicPlaying;
+        }
+
         function updateStats() {
             document.getElementById('courage').textContent = stats.courage;
             document.getElementById('wisdom').textContent = stats.wisdom;
             document.getElementById('kindness').textContent = stats.kindness;
         }
 
-        // Apply stat changes
         function applyStats(statChanges) {
             if (statChanges) {
                 for (const [stat, change] of Object.entries(statChanges)) {
@@ -401,32 +432,22 @@
             }
         }
 
-        // Display a scene
         function showScene(sceneId) {
             const scene = story[sceneId];
-            const storyText = document.getElementById('storyText');
+            document.getElementById('sceneArt').textContent = scene.art || "❄️";
+            document.getElementById('storyText').textContent = scene.text;
             const choicesDiv = document.getElementById('choices');
-            const sceneArt = document.getElementById('sceneArt');
-
-            // Update scene art
-            sceneArt.textContent = scene.art || "❄️";
-
-            // Update story text
-            storyText.textContent = scene.text;
-
-            // Clear choices
             choicesDiv.innerHTML = '';
 
-            // Check if this is an ending
             if (scene.ending) {
                 const endingDiv = document.createElement('div');
                 endingDiv.className = 'ending';
-                endingDiv.innerHTML = `<div class="ending-title">🎭 ${scene.title} 🎭</div>`;
+                endingDiv.innerHTML = '<div class="ending-title">' + scene.title + '</div>';
                 choicesDiv.appendChild(endingDiv);
 
                 const restartBtn = document.createElement('button');
                 restartBtn.className = 'restart-btn';
-                restartBtn.textContent = '🔄 Begin a New Adventure';
+                restartBtn.textContent = 'Begin a New Adventure';
                 restartBtn.onclick = () => {
                     stats = { courage: 5, wisdom: 5, kindness: 5 };
                     updateStats();
@@ -434,7 +455,6 @@
                 };
                 choicesDiv.appendChild(restartBtn);
             } else {
-                // Add choice buttons
                 scene.choices.forEach(choice => {
                     const btn = document.createElement('button');
                     btn.className = 'choice-btn';
@@ -447,35 +467,29 @@
                 });
             }
 
-            // Save progress
-            localStorage.setItem('winterAdventure', JSON.stringify({
-                scene: sceneId,
-                stats: stats
-            }));
+            localStorage.setItem('winterAdventure', JSON.stringify({ scene: sceneId, stats: stats }));
         }
 
-        // Create snowflakes
         function createSnowflakes() {
             const container = document.getElementById('snowflakes');
-            const snowflakeChars = ['❄', '❅', '❆', '✧', '✦'];
+            const chars = ['*', '+', '.', '~'];
             
-            for (let i = 0; i < 50; i++) {
-                const snowflake = document.createElement('div');
-                snowflake.className = 'snowflake';
-                snowflake.textContent = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
-                snowflake.style.left = Math.random() * 100 + 'vw';
-                snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
-                snowflake.style.animationDelay = (Math.random() * 10) + 's';
-                snowflake.style.fontSize = (Math.random() * 1.5 + 0.5) + 'rem';
-                container.appendChild(snowflake);
+            for (let i = 0; i < 60; i++) {
+                const el = document.createElement('div');
+                el.className = 'snowflake';
+                el.textContent = chars[Math.floor(Math.random() * chars.length)];
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                el.style.animationDelay = (Math.random() * 10) + 's';
+                el.style.fontSize = (Math.random() * 1.5 + 0.5) + 'rem';
+                container.appendChild(el);
             }
         }
 
-        // Initialize
         function init() {
             createSnowflakes();
+            document.getElementById('musicBtn').onclick = toggleMusic;
             
-            // Check for saved game
             const saved = localStorage.getItem('winterAdventure');
             if (saved) {
                 const data = JSON.parse(saved);
